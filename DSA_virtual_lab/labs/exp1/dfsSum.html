@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFS Simulator</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: Arial;
+        }
+        .container {
+            margin: 50px auto;
+            max-width: 800px;
+        }
+        .graph-input {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid black;
+            font-size: 16px;
+        }
+        .submit-graph {
+            margin-top: 10px;
+            width: 100%;
+            height: 40px;
+            border-radius: 5px;
+            border: none;
+            color: white;
+            background-color: #009dff;
+            font-size: 16px;
+        }
+        .submit-graph:hover {
+            background-color: #06585e;
+            transform: scale(1.02);
+        }
+        .node {
+            padding: 10px;
+            margin: 5px;
+            background-color: lightgrey;
+            display: inline-block;
+            border-radius: 50%;
+            text-align: center;
+        }
+        .visited {
+            background-color: green;
+            color: white;
+        }
+        .graph {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="text-center">Depth First Search Simulator</h1>
+    <h3>Graph Input</h3>
+    <textarea class="graph-input" id="graph-input" placeholder="Enter adjacency list (e.g., 0: 1 2, 1: 2 3, 2: 3, 3: 4)"></textarea>
+    <button class="submit-graph" id="submit-graph">Simulate DFS</button>
+    <div class="input-error" id="input-error"></div>
+    <h3>DFS Traversal</h3>
+    <div class="graph" id="graph"></div>
+    <div class="status" id="status"></div>
+</div>
+
+<!-- jQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    const sleep = async (ms) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    };
+
+    const parseGraphInput = (inputStr) => {
+        const graph = {};
+        const lines = inputStr.trim().split(',');
+        for (let line of lines) {
+            const [node, edges] = line.trim().split(':');
+            graph[node.trim()] = edges.trim().split(' ').map(Number);
+        }
+        return graph;
+    };
+
+    const insertGraphToHtml = (graph, traversal) => {
+        let html = '';
+        for (let node in graph) {
+            html += '<div class="node" id="node-' + node + '">' + node + '</div>';
+        }
+        document.getElementById('graph').innerHTML = html;
+        highlightNodes(traversal);
+    };
+
+    const highlightNodes = async (traversal) => {
+        for (let node of traversal) {
+            document.getElementById('node-' + node).classList.add('visited');
+            setStatus('visiting node ' + node);
+            await sleep(1000);
+        }
+        setStatus('DFS Complete');
+    };
+
+    const setStatus = (status) => {
+        const statusElem = document.getElementById('status');
+        statusElem.innerHTML = status;
+    };
+
+    const dfs = (graph, start) => {
+        const stack = [start];
+        const visited = new Set();
+        const traversal = [];
+
+        while (stack.length) {
+            const node = stack.pop();
+            if (!visited.has(node)) {
+                visited.add(node);
+                traversal.push(node);
+                for (let neighbor of graph[node]) {
+                    if (!visited.has(neighbor)) {
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
+        return traversal;
+    };
+
+    const handleDFS = async () => {
+        const graphInput = document.getElementById('graph-input').value;
+        if (!graphInput) {
+            document.getElementById('input-error').innerHTML = 'Incorrect input!';
+            return;
+        }
+        document.getElementById('input-error').innerHTML = '';
+
+        const graph = parseGraphInput(graphInput);
+        const traversal = dfs(graph, Object.keys(graph)[0]);
+        insertGraphToHtml(graph, traversal);
+    };
+
+    document.getElementById('submit-graph').addEventListener('click', handleDFS);
+</script>
+
+</body>
+</html>
